@@ -2,11 +2,14 @@ import AstronautsTable from "@/components/astronautsTable";
 import Search from "@/components/search";
 import { Astronaut } from "@/types/astronaut";
 import { Title, Text, Card } from "@tremor/react";
+import { GetServerSideProps } from "next";
 import React from "react";
 
 type AstronautsProps = {
   astronauts: Astronaut[];
 };
+
+type AstronautsParams = {};
 
 export default function Astronauts({ astronauts }: AstronautsProps) {
   return (
@@ -23,7 +26,7 @@ export default function Astronauts({ astronauts }: AstronautsProps) {
   );
 }
 
-export async function getStaticProps() {
+export const getServerSideProps: GetServerSideProps<AstronautsProps, AstronautsParams> = async () => {
   const response = await fetch("http://localhost:8080/graphql", {
     method: "POST",
     headers: {
@@ -42,7 +45,7 @@ export async function getStaticProps() {
     }),
   });
 
-  const gql = await response.json();
+  const gql: getAllAstronautsResponse = await response.json();
 
   return {
     props: {
@@ -50,3 +53,16 @@ export async function getStaticProps() {
     },
   };
 }
+
+// gql types
+type getAllAstronautsResponse = {
+  data: {
+    getAllAstronauts: getAllAstronautsAstronaut[];
+  };
+};
+
+type getAllAstronautsAstronaut = {
+  id: string;
+  name: string;
+  isPilot: boolean;
+};

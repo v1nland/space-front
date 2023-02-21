@@ -1,33 +1,34 @@
-import MissionsTable from "@/components/missionsTable";
+import AstronautsTable from "@/components/astronautsTable";
 import Search from "@/components/search";
-import { Astronaut } from "@/types/astronaut";
 import { Mission } from "@/types/mission";
 import { Title, Text, Card } from "@tremor/react";
 import { GetServerSideProps } from "next";
 import React from "react";
 
-type MissionsProps = {
-  missions: Mission[];
+type MissionDetailsProps = {
+  missionDetails: Mission;
 };
 
-type MissionsParams = {};
+type MissionDetailsParams = {
+  id: string;
+};
 
-export default function Missions({ missions }: MissionsProps) {
+export default function MissionDetails({ missionDetails }: MissionDetailsProps) {
   return (
     <main className="p-4 md:p-10 mx-auto max-w-7xl">
-      <Title>Missions</Title>
+      <Title>Mission details</Title>
       <Text>
-        A list of missions retrieved from the space-playground database.
+        The detail of the mission retrieved from the space-playground database.
       </Text>
       <Search />
       <Card marginTop="mt-6">
-        <MissionsTable missions={missions} />
+        <AstronautsTable astronauts={missionDetails.crew} />
       </Card>
     </main>
   );
 }
 
-export const getServerSideProps: GetServerSideProps<MissionsProps, MissionsParams> = async () => {
+export const getServerSideProps: GetServerSideProps<MissionDetailsProps, MissionDetailsParams> = async (context) => {
   const response = await fetch("http://localhost:8080/graphql", {
     method: "POST",
     headers: {
@@ -36,7 +37,7 @@ export const getServerSideProps: GetServerSideProps<MissionsProps, MissionsParam
     body: JSON.stringify({
       query: `
         query {
-          getAllMissions {
+          getMissionById(id: ${context.params?.id}) {
             id
             title
             description
@@ -51,30 +52,28 @@ export const getServerSideProps: GetServerSideProps<MissionsProps, MissionsParam
     }),
   });
 
-  const gql: getAllMissionsResponse = await response.json();
+  const gql: getMissionByIdResponse = await response.json();
 
   return {
     props: {
-      missions: gql.data.getAllMissions,
+      missionDetails: gql.data.getMissionById,
     },
   };
 }
 
 // gql types
-type getAllMissionsResponse = {
+type getMissionByIdResponse = {
   data: {
-    getAllMissions: getAllMissionsMission[],
+    getMissionById: {
+      id: number;
+      title: string;
+      description: string;
+      crew: getMissionByIdCrew[],
+    }
   }
 };
 
-type getAllMissionsMission = {
-  id: number;
-  title: string;
-  description: string;
-  crew: getAllMissionsCrew[],
-};
-
-type getAllMissionsCrew = {
+type getMissionByIdCrew = {
   id: string;
   name: string;
   isPilot: boolean;
